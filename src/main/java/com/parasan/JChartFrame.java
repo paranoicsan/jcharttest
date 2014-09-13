@@ -6,10 +6,12 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.data.time.DynamicTimeSeriesCollection;
-import org.jfree.data.time.Second;
+import org.jfree.data.time.Millisecond;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 /**
  * User: sanych
@@ -19,6 +21,10 @@ import java.awt.*;
 public class JChartFrame extends JFrame {
 
     public static final String TITLE_CHART = "Проверка";
+    public static final int HIGH_LIMIT = 100;
+    public static final int LOW_LIMIT = -100;
+    public static final int DATA_PERIOD = 500;
+
     private final DynamicTimeSeriesCollection dataset;
 
     public JChartFrame() {
@@ -33,9 +39,9 @@ public class JChartFrame extends JFrame {
     }
 
     private DynamicTimeSeriesCollection createDataSet() {
-        DynamicTimeSeriesCollection result = new DynamicTimeSeriesCollection(1, 2 * 60, new Second());
-        result.setTimeBase(new Second());
-//        result.addSeries(data, 0, "Data");
+        DynamicTimeSeriesCollection result = new DynamicTimeSeriesCollection(1, 2 * 60, new Millisecond());
+        result.setTimeBase(new Millisecond());
+        result.advanceTime();
         return result;
     }
 
@@ -48,14 +54,39 @@ public class JChartFrame extends JFrame {
         domain.setAutoRange(true);
 
         ValueAxis range = plot.getRangeAxis();
-        range.setRange(-100, 100);
+        range.setRange(LOW_LIMIT, HIGH_LIMIT);
 
         return result;
     }
 
+    private void updateData(double value) {
+
+        float[] data = {(float) value};
+
+        // Если серий ещё нет - создаём
+        if (dataset.getSeriesCount() == 0) {
+            dataset.addSeries(data, 0, "");
+        }
+        dataset.advanceTime();
+        dataset.appendData(data);
+    }
+
     public static void main(String[] args) {
-        JChartFrame chart = new JChartFrame();
+
+        //  Создаём и показывает начальный график
+        final JChartFrame chart = new JChartFrame();
         chart.pack();
         chart.setVisible(true);
+
+        // Запускаем задачу, которая будет генерировать новые данные
+        // эти данные надо передавать графику, чтобы он обновлялся
+        Timer timer = new Timer(DATA_PERIOD, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                double value = Math.random() * (HIGH_LIMIT - LOW_LIMIT) + LOW_LIMIT;
+                chart.updateData(value);
+            }
+        });
+        timer.start();
     }
 }
