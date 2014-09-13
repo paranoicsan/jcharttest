@@ -26,13 +26,14 @@ public class JChartFrame extends JFrame {
     public static final int DATA_PERIOD = 500;
 
     private final DynamicTimeSeriesCollection dataset;
+    private ChartPanel chartPanel;
 
     public JChartFrame() {
 
         dataset = createDataSet();
         JFreeChart chart = build();
 
-        final ChartPanel chartPanel = new ChartPanel(chart);
+        chartPanel = new ChartPanel(chart);
         chartPanel.setPreferredSize(new Dimension(500, 270));
 
         setContentPane(chartPanel);
@@ -59,6 +60,10 @@ public class JChartFrame extends JFrame {
         return result;
     }
 
+    public void updateChartPanel() {
+        chartPanel.restoreAutoBounds();
+    }
+
     private void updateData(double value) {
 
         float[] data = {(float) value};
@@ -69,6 +74,7 @@ public class JChartFrame extends JFrame {
         }
         dataset.advanceTime();
         dataset.appendData(data);
+        updateChartPanel();
     }
 
     public static void main(String[] args) {
@@ -77,6 +83,7 @@ public class JChartFrame extends JFrame {
         final JChartFrame chart = new JChartFrame();
         chart.pack();
         chart.setVisible(true);
+
 
         // Запускаем задачу, которая будет генерировать новые данные
         // эти данные надо передавать графику, чтобы он обновлялся
